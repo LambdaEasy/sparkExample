@@ -1,5 +1,8 @@
 ﻿using Microsoft.Spark.Sql;
+using Microsoft.Spark.Sql.Types;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SparkExample
 {
@@ -13,15 +16,31 @@ namespace SparkExample
                 .AppName("Simple Spark Example")
                 .GetOrCreate();
 
-            // Cargar datos en un DataFrame
-            string filePath = args.FirstOrDefault(); // Reemplaza con la ruta de tu archivo CSV
-            var df = spark.Read().Csv(filePath);
+            // Crear una lista de filas con datos (manualmente, sin archivo CSV)
+            var data = new List<object[]>
+                {
+                    new object[] { 1, "Alice" },
+                    new object[] { 2, "Bob" },
+                    new object[] { 3, "Charlie" },
+                    new object[] { 4, "David" },
+                    new object[] { 5, "Eve" }
+                };
+
+            // Definir el esquema para los datos
+            var schema = new StructType(new[]
+            {
+                    new StructField("ID", new IntegerType()),
+                    new StructField("Name", new StringType())
+                });
+
+            // Crear un DataFrame a partir de los datos y el esquema
+            var df = spark.CreateDataFrame(data.Select(row => new GenericRow(row)).ToList(), schema);
 
             // Mostrar el esquema del DataFrame
             df.PrintSchema();
 
             // Realizar una operación de transformación
-            var result = df.Select("Column1", "Column2").Where("Column1 > 10");
+            var result = df.Filter("ID > 2");
 
             // Mostrar el resultado
             result.Show();
